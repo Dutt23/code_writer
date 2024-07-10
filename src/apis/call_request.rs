@@ -6,7 +6,9 @@ use std::env;
 use reqwest::header::{HeaderMap, HeaderValue};
 // Call Large language model (i.e GPT-4)
 
-pub async fn call_gpt(messages: Vec<Message>) {
+//used so that it can hold any object which holds the error trait
+// dyn used for dynamic dispatch, decides which trait to use at runtime
+pub async fn call_gpt(messages: Vec<Message>) -> Result<String, Box<dyn std::error::Error + Send>> {
     dotenv().ok();
 
     // Extract api key info
@@ -19,17 +21,17 @@ pub async fn call_gpt(messages: Vec<Message>) {
     // Create api key header
     headers.insert(
         "authorization",
-        HeaderValue::from_str(&format!("Bearer {}", api_key)).unwrap(),
+        HeaderValue::from_str(&format!("Bearer {}", api_key)).map_err(|e| -> Box<dyn std::error::Error + Send> { Box::new(e)})?,
     );
 
     headers.insert(
         "OpenAI-Organization",
-        HeaderValue::from_str(api_org.as_str()).unwrap(),
+        HeaderValue::from_str(api_org.as_str()).map_err(|e| -> Box<dyn std::error::Error + Send> { Box::new(e)})?,
     );
 
     // Create client
 
-    let client = Client::builder().default_headers(headers).build().unwrap();
+    let client = Client::builder().default_headers(headers).build().map_err(|e| -> Box<dyn std::error::Error + Send> { Box::new(e)})?;
 
     let chat_completion: ChatCompletion = ChatCompletion {
         model: "gpt-3.5-turbo".to_string(),
@@ -37,14 +39,17 @@ pub async fn call_gpt(messages: Vec<Message>) {
         temperature: 0.1,
     };
 
-    let res_raw = client
-        .post(url)
-        .json(&chat_completion)
-        .send()
-        .await
-        .unwrap();
+    // let res_raw = client
+    //     .post(url)
+    //     .json(&chat_completion)
+    //     .send()
+    //     .await
+    //     .unwrap();
 
-    dbg!(res_raw.text().await.unwrap());
+    // dbg!(res_raw.text().await.unwrap());
+
+    
+    Ok(("gpt-3.5-turbo".to_string()))
 }
 
 
