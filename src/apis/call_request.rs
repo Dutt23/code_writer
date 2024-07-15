@@ -1,4 +1,4 @@
-use crate::models::general::llm::{ChatCompletion, Message};
+use crate::models::general::llm::{APIResponse, ChatCompletion, Message};
 use dotenv::dotenv;
 use reqwest::Client;
 use std::env;
@@ -21,17 +21,22 @@ pub async fn call_gpt(messages: Vec<Message>) -> Result<String, Box<dyn std::err
     // Create api key header
     headers.insert(
         "authorization",
-        HeaderValue::from_str(&format!("Bearer {}", api_key)).map_err(|e| -> Box<dyn std::error::Error + Send> { Box::new(e)})?,
+        HeaderValue::from_str(&format!("Bearer {}", api_key))
+            .map_err(|e| -> Box<dyn std::error::Error + Send> { Box::new(e) })?,
     );
 
     headers.insert(
         "OpenAI-Organization",
-        HeaderValue::from_str(api_org.as_str()).map_err(|e| -> Box<dyn std::error::Error + Send> { Box::new(e)})?,
+        HeaderValue::from_str(api_org.as_str())
+            .map_err(|e| -> Box<dyn std::error::Error + Send> { Box::new(e) })?,
     );
 
     // Create client
 
-    let client = Client::builder().default_headers(headers).build().map_err(|e| -> Box<dyn std::error::Error + Send> { Box::new(e)})?;
+    let client = Client::builder()
+        .default_headers(headers)
+        .build()
+        .map_err(|e| -> Box<dyn std::error::Error + Send> { Box::new(e) })?;
 
     let chat_completion: ChatCompletion = ChatCompletion {
         model: "gpt-3.5-turbo".to_string(),
@@ -47,25 +52,47 @@ pub async fn call_gpt(messages: Vec<Message>) -> Result<String, Box<dyn std::err
     //     .unwrap();
 
     // dbg!(res_raw.text().await.unwrap());
+    let res: APIResponse = client
+        .post(url)
+        .json(&chat_completion)
+        .send()
+        .await
+        .map_err(|e| -> Box<dyn std::error::Error + Send> { Box::new(e) })?
+        .json()
+        .await
+        .map_err(|e| -> Box<dyn std::error::Error + Send> { Box::new(e) })?;
 
-    
-    Ok(("gpt-3.5-turbo".to_string()))
+    Ok(res.choices[0].message.content.clone())
 }
-
 
 #[cfg(test)]
 mod test {
-  use super::*;
+    use super::*;
 
-  #[tokio::test]
-  async fn tests_call_to_openai() {
-    let message : Message = Message {
-      role:"user".to_string(),
-      content: "Hi there, this is a test. Give me a short response".to_string()
-    };
+    #[tokio::test]
+    async fn tests_call_to_openai() {
+        let message: Message = Message {
+            role: "user".to_string(),
+            content: "Hi there, this is a test. Give me a short response".to_string(),
+        };
 
-    let messages: Vec<Message> = vec![message];
+        let messages: Vec<Message> = vec![message];
 
-    call_gpt(messages).await;
-  }
+        let res = call_gpt(messages).await;
+
+        // if let (Ok(res_string)) = res {
+        //     dbg!(res_string);
+        //     assert!(true)
+        // } else {
+        //     assert!(false)
+        // }
+
+        match res {
+            Ok(res_string) => {
+                dbg!(res_string);
+                assert!(true)
+            }
+            Err(_) => assert!(false),
+        }
+    }
 }
