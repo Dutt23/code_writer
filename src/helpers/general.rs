@@ -1,5 +1,6 @@
 use reqwest::Client;
 use serde::de::DeserializeOwned;
+use std::env;
 
 use crate::apis::call_request::call_gpt;
 use crate::helpers::command_line::PrintCommand;
@@ -57,8 +58,8 @@ pub async fn ai_task_request_decoded<T: DeserializeOwned>(
 }
 
 pub async fn check_status_code(client: &Client, url: &str) -> Result<u16, reqwest::Error> {
-    let response: reqwest::Response = client.get(url).send().await;
-    Ok(response.status().as_u16());
+    let response: reqwest::Response = client.get(url).send().await?;
+    Ok(response.status().as_u16())
 }
 
 // Get code template
