@@ -132,3 +132,29 @@ impl SpecialFunctions for AgentSolutionsArchitect {
         Ok(())
     }
 }
+
+#[cfg(test)]
+mod test {
+    use super::*;
+
+    #[tokio::test]
+    async fn tests_solution_architect() {
+        let mut agent = AgentSolutionsArchitect::new();
+        let mut factsheet = FactSheet {
+          project_description: "Build a full stack website with user login and logout that shows latest Forex prices".to_string(),
+          project_scope: None,
+          external_url:None,
+          backend_code: None,
+          api_endpoint_schema: None,
+        };
+        agent
+            .execute(&mut factsheet)
+            .await
+            .expect("Unable to execute solutions architect agent");
+        assert!(factsheet.project_scope != None);
+        assert!(factsheet.external_url.is_some());
+
+        dbg!(agent);
+        dbg!(factsheet);
+    }
+}

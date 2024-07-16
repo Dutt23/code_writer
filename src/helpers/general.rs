@@ -10,7 +10,6 @@ use std::io::Write;
 
 pub fn extend_ai_function(ai_func: fn(&str) -> &'static str, func_input: &str) -> Message {
     let ai_function_str = ai_func(func_input);
-    dbg!(ai_function_str);
     let msg: String = format!("FUNCTION {} 
     INSTRUCTION: You are a function printer. You ONLY print the result of the functions. Nothing else. No commentary.
     Here is the input to the function {}.
@@ -31,10 +30,8 @@ pub async fn ai_task_request(
 ) -> String {
     let func_msg = extend_ai_function(function_pass, &msg_context);
     PrintCommand::AICall.print_agent_message(agent_position, agent_operation);
-
     // LLM Response
     let llm_response_res = call_gpt(vec![func_msg.clone()]).await;
-
     match llm_response_res {
         Ok(llm_res) => llm_res,
         Err(_) => call_gpt(vec![func_msg])
@@ -51,6 +48,7 @@ pub async fn ai_task_request_decoded<T: DeserializeOwned>(
 ) -> T {
     let llm_response =
         ai_task_request(msg_context, agent_position, agent_operation, function_pass).await;
+    dbg!(&llm_response);
     let decoded_message: T = serde_json::from_str(llm_response.as_str())
         .expect("Failed to decode ai response from serde_json");
 
