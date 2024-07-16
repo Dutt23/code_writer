@@ -3,7 +3,10 @@ use crate::{
     helpers::general::ai_task_request,
     models::{
         agent_basic::basic_agent::{AgentState, BasicAgent},
-        agents::agent_traits::{FactSheet, SpecialFunctions},
+        agents::{
+            agent_architect::AgentSolutionsArchitect,
+            agent_traits::{FactSheet, SpecialFunctions},
+        },
     },
 };
 
@@ -47,5 +50,26 @@ impl ManagingAgent {
             attributes,
             factsheet,
         })
+    }
+
+    fn add_agent(&mut self, agent: Box<dyn SpecialFunctions>) {
+        self.agents.push(agent);
+    }
+
+    fn create_agents(&mut self) {
+        self.agents.push(Box::new(AgentSolutionsArchitect::new()))
+        // Add backend agent
+    }
+
+    pub async fn execute_project(&mut self) {
+        self.create_agents();
+
+        for agent in &mut self.agents {
+            let agent_res: Result<(), Box<dyn std::error::Error>> =
+                agent.execute(&mut self.factsheet).await;
+
+            let agent_info = agent.get_attributes_from_agent();
+            dbg!(agent_info);
+        }
     }
 }
