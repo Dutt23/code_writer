@@ -1,8 +1,11 @@
+use reqwest::Client;
 use serde::de::DeserializeOwned;
 
 use crate::apis::call_request::call_gpt;
 use crate::helpers::command_line::PrintCommand;
 use crate::models::general::llm::Message;
+use std::fs;
+use std::io::Write;
 
 pub fn extend_ai_function(ai_func: fn(&str) -> &'static str, func_input: &str) -> Message {
     let ai_function_str = ai_func(func_input);
@@ -51,6 +54,31 @@ pub async fn ai_task_request_decoded<T: DeserializeOwned>(
         .expect("Failed to decode ai response from serde_json");
 
     decoded_message
+}
+
+pub async fn check_status_code(client: &Client, url: &str) -> Result<u16, reqwest::Error> {
+    let response: reqwest::Response = client.get(url).send().await;
+    Ok(response.status().as_u16());
+}
+
+// Get code template
+pub fn read_code_template_contents() -> String {
+    let path = env::var("TEMPLATE_PATH").expect("Code template path not found");
+    let template_path = format!("{}/_code_template.rs", path);
+    fs::read_to_string(path).expect("Failed to read code template")
+}
+// Save new backend code
+pub fn save_backend_code(contents: &str) {
+    let path = env::var("TEMPLATE_PATH").expect("Code template path not found");
+    let main_path = format!("{}/main.rs", path);
+    fs::write(path, contents.as_bytes());
+}
+// Save JSON API Endpoint Schema
+pub fn save_api_endpoint(contents: &str) {
+    let mut data_file = fs::File::open("schemas/api_schemas.json").expect("Unable to open file");
+    data_file
+        .write(contents.as_bytes())
+        .expect("Failed to write api endpoint json paths");
 }
 
 #[cfg(test)]

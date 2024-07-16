@@ -13,7 +13,7 @@ pub async fn call_gpt(messages: Vec<Message>) -> Result<String, Box<dyn std::err
 
     // Extract api key info
     let api_key: String = env::var("OPEN_AI_KEY").expect("Open ai key not found in variables");
-    let api_org: String = env::var("OPEN_AI_ORG").expect("Open ai org id not foudn");
+    let api_org: String = env::var("OPEN_AI_ORG").expect("Open ai org id not found");
 
     let url: &str = "https://api.openai.com/v1/chat/completions";
 
