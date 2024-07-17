@@ -15,7 +15,7 @@ use crate::{
         command_line::{confirm_safe_code, PrintCommand},
         general::{
             ai_task_request, check_status_code, read_code_template_contents,
-            read_exec_main_contents, save_backend_code,
+            read_exec_main_contents, save_api_endpoint, save_backend_code,
         },
     },
     models::agent_basic::{
@@ -240,7 +240,7 @@ impl SpecialFunctions for AgentBackendDeveloper {
                         PrintCommand::UnitTest
                             .print_agent_message(&self.attributes.position, testing_msg.as_str());
 
-                        let url = format!("http://localhost:8080/{}", ep.route);
+                        let url = format!("http://localhost:8080{}", ep.route);
                         match check_status_code(&client, &url).await {
                             Ok(status) => {
                                 if status != 200 {
@@ -264,6 +264,7 @@ impl SpecialFunctions for AgentBackendDeveloper {
                             }
                         }
                     }
+                    save_api_endpoint(&api_endpoint_str);
                     PrintCommand::UnitTest.print_agent_message(
                         &self.attributes.position,
                         "Backend code unit testing: testing complete",
@@ -304,7 +305,7 @@ mod tests {
     "api_endpoint_schema": null
 }"#;
         let mut fact_sheet: FactSheet = serde_json::from_str(fact_sheet_str).unwrap();
-        // agent.attributes.state = AgentState::UnitTesting;
+        agent.attributes.state = AgentState::UnitTesting;
         agent
             .execute(&mut fact_sheet)
             .await

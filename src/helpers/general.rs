@@ -79,10 +79,7 @@ pub fn save_backend_code(contents: &str) {
 }
 // Save JSON API Endpoint Schema
 pub fn save_api_endpoint(contents: &str) {
-    let mut data_file = fs::File::open("schemas/api_schemas.json").expect("Unable to open file");
-    data_file
-        .write(contents.as_bytes())
-        .expect("Failed to write api endpoint json paths");
+    fs::write("schemas/api_schemas.json", contents).expect("Failed to write API ENDPOINTs");
 }
 
 #[cfg(test)]
