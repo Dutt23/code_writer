@@ -179,7 +179,6 @@ impl SpecialFunctions for AgentBackendDeveloper {
                         let err_arr = build_backend_server.stderr;
                         let err_str = String::from_utf8(err_arr).unwrap();
 
-                        dbg!(&err_str);
                         self.bug_count += 1;
                         self.bug_errors = Some(err_str);
 

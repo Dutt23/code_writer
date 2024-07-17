@@ -69,7 +69,6 @@ impl ManagingAgent {
                 agent.execute(&mut self.factsheet).await;
 
             let agent_info = agent.get_attributes_from_agent();
-            dbg!(agent_info);
         }
     }
 }

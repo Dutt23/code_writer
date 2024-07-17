@@ -73,7 +73,6 @@ pub fn read_exec_main_contents() -> String {
 }
 // Save new backend code
 pub fn save_backend_code(contents: &str) {
-    dbg!(&contents);
     let path = env::var("TEMPLATE_PATH").expect("Code template path not found");
     let main_path = format!("{}/main.rs", path);
     fs::write(main_path, contents.as_bytes());
