@@ -43,7 +43,7 @@ pub fn confirm_safe_code() -> bool {
         stdout.execute(ResetColor).unwrap();
 
         stdout.execute(SetForegroundColor(Color::Green)).unwrap();
-        print!("[1] All good");
+        print!("[1] All good \n");
         stdout.execute(SetForegroundColor(Color::DarkRed)).unwrap();
         print!("[2] Lets stop this project");
         stdout.execute(ResetColor).unwrap();

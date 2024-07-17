@@ -62,8 +62,7 @@ impl AgentBackendDeveloper {
             print_backend_webserver_code,
         )
         .await;
-
-        save_backend_code(&ai_response);
+        save_backend_code(&ai_response.replace("```rust", "").replace("```", ""));
         factsheet.backend_code = Some(ai_response);
     }
 
@@ -81,7 +80,7 @@ impl AgentBackendDeveloper {
         )
         .await;
 
-        save_backend_code(&ai_response);
+        save_backend_code(&ai_response.replace("```rust", "").replace("```", ""));
         factsheet.backend_code = Some(ai_response);
     }
 
@@ -101,7 +100,7 @@ impl AgentBackendDeveloper {
         )
         .await;
 
-        save_backend_code(&ai_response);
+        save_backend_code(&ai_response.replace("```rust", "").replace("```", ""));
         factsheet.backend_code = Some(ai_response);
     }
 
@@ -180,6 +179,7 @@ impl SpecialFunctions for AgentBackendDeveloper {
                         let err_arr = build_backend_server.stderr;
                         let err_str = String::from_utf8(err_arr).unwrap();
 
+                        dbg!(&err_str);
                         self.bug_count += 1;
                         self.bug_errors = Some(err_str);
 
@@ -201,7 +201,7 @@ impl SpecialFunctions for AgentBackendDeveloper {
                     let check_eps: Vec<RouteObject> = api_ep
                         .iter()
                         .filter(|&route_object| {
-                            route_object.method == "get" && !route_object.is_route_dynamic
+                            route_object.method == "get" && route_object.is_route_dynamic == "false"
                         })
                         .cloned()
                         .collect();
@@ -305,7 +305,7 @@ mod tests {
     "api_endpoint_schema": null
 }"#;
         let mut fact_sheet: FactSheet = serde_json::from_str(fact_sheet_str).unwrap();
-
+        // agent.attributes.state = AgentState::UnitTesting;
         agent
             .execute(&mut fact_sheet)
             .await

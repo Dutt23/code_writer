@@ -8,6 +8,7 @@ pub fn print_backend_webserver_code(_project_description_and_template: &str) {
     /// FUNCTION: Takes an existing set of code marked as CODE_TEMPLATE and updates or re-writes it to work for the purpose in the PROJECT_DESCRIPTION
     /// IMPORTANT: The following libraries are already installed
     ///   reqwest, serde, serde_json, tokio, actix-web, async-trait, actix_cors
+    /// IMPORTANT: ONLY outputs the code in executable form.
     /// No other external libraries should be used. Write functions that fit with the description from the PROJECT_DESCRIPTION
     /// OUTPUT: Print ONLY the code, nothing else. This function ONLY prints code.
     println!(OUTPUT)
@@ -20,7 +21,6 @@ pub fn print_improved_webserver_code(_project_description_and_template: &str) {
     ///   1. Removes any bugs in the code and adds minor additional functionality
     ///   2. Makes sure everything requested in the spec from a backend standpoint was followed. If not, add the feature. No code should be implemented later. Everything should be written now.
     ///   3. ONLY writes the code. No commentary.
-    ///   4. IF there is nothing to improve on return the code itself.
     /// IMPORTANT: The following libraries are already installed. Does not use ANY libraries other than what was provided in the template
     ///   reqwest, serde, serde_json, tokio, actix-web, async-trait
     println!(OUTPUT)
