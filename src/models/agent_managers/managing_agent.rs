@@ -5,6 +5,7 @@ use crate::{
         agent_basic::basic_agent::{AgentState, BasicAgent},
         agents::{
             agent_architect::AgentSolutionsArchitect,
+            agent_backend::AgentBackendDeveloper,
             agent_traits::{FactSheet, SpecialFunctions},
         },
     },
@@ -57,7 +58,8 @@ impl ManagingAgent {
     }
 
     fn create_agents(&mut self) {
-        self.agents.push(Box::new(AgentSolutionsArchitect::new()))
+        self.agents.push(Box::new(AgentSolutionsArchitect::new()));
+        self.agents.push(Box::new(AgentBackendDeveloper::new()));
         // Add backend agent
     }
 
