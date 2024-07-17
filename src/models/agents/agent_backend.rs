@@ -1,9 +1,10 @@
 use std::{
     env,
     process::{Command, Stdio},
+    time::Duration,
 };
 
-use super::agent_traits::{FactSheet, SpecialFunctions};
+use super::agent_traits::{FactSheet, RouteObject, SpecialFunctions};
 use crate::{
     ai_functions::aifunc_backend::{
         print_backend_webserver_code, print_fixed_code, print_improved_webserver_code,
@@ -22,6 +23,7 @@ use crate::{
     },
 };
 use dotenv::dotenv;
+use tokio::time;
 
 #[derive(Debug)]
 pub struct AgentBackendDeveloper {
@@ -164,7 +166,7 @@ impl SpecialFunctions for AgentBackendDeveloper {
                         .stdout(Stdio::piped())
                         .stderr(Stdio::piped())
                         .output()
-                        .expect("Failed to fun backend application");
+                        .expect("Failed to build backend application");
 
                     if build_backend_server.status.success() {
                         self.bug_count = 0;
@@ -189,6 +191,42 @@ impl SpecialFunctions for AgentBackendDeveloper {
                         self.attributes.state = AgentState::Working;
                         continue;
                     }
+
+                    let api_endpoint_str: String = self.call_extract_rest_api_endpoints().await;
+                    let api_ep: Vec<RouteObject> = serde_json::from_str(&api_endpoint_str)
+                        .expect("Failed to decode api endpoints");
+
+                    let check_eps: Vec<RouteObject> = api_ep
+                        .iter()
+                        .filter(|&route_object| {
+                            route_object.method == "get" && !route_object.is_route_dynamic
+                        })
+                        .cloned()
+                        .collect();
+
+                    factsheet.api_endpoint_schema = Some(check_eps);
+
+                    PrintCommand::UnitTest.print_agent_message(
+                        &self.attributes.position,
+                        "Backend code unit testing: Starting web server...",
+                    );
+
+                    let path = env::var("EXEC_PATH").expect("Code execution path not found");
+                    let run_backend_server: std::process::Output = Command::new("cargo")
+                        .arg("run")
+                        .current_dir(path)
+                        .stdout(Stdio::piped())
+                        .stderr(Stdio::piped())
+                        .output()
+                        .expect("Failed to fun backend application");
+
+                    PrintCommand::UnitTest.print_agent_message(
+                        &self.attributes.position,
+                        "Backend code unit testing: Launching test on server in 5 secs...",
+                    );
+
+                    let seconds_sleep = Duration::from_secs(5);
+                    time::sleep(seconds_sleep).await;
 
                     self.attributes.state = AgentState::Finished;
                 }
