@@ -1,3 +1,4 @@
+use super::agent_traits::{FactSheet, SpecialFunctions};
 use crate::{
     ai_functions::aifunc_backend::{
         print_backend_webserver_code, print_fixed_code, print_improved_webserver_code,
@@ -11,8 +12,7 @@ use crate::{
         basic_traits::BasicTrait,
     },
 };
-
-use super::agent_traits::{FactSheet, SpecialFunctions};
+use dotenv::dotenv;
 
 #[derive(Debug)]
 pub struct AgentBackendDeveloper {
@@ -56,7 +56,7 @@ impl AgentBackendDeveloper {
 
     async fn call_improved_backend_code(&mut self, factsheet: &mut FactSheet) {
         let msg_context: String = format!(
-            "CODE TEMPLATE {:?} \n PROJECT_DESCRIPTION {:?} \n",
+            "CODE TEMPLATE: {:?} \n PROJECT_DESCRIPTION: {:?} \n",
             factsheet.backend_code, factsheet
         );
 
@@ -139,5 +139,38 @@ impl SpecialFunctions for AgentBackendDeveloper {
             }
         }
         Ok(())
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[tokio::test]
+    async fn tests_writing_backend_code() {
+        std::env::set_var("RUST_BACKTRACE", "1");
+        dotenv().ok();
+        let mut agent = AgentBackendDeveloper::new();
+        let fact_sheet_str: &str = r#"{
+    "project_description": "build a website that fetches and tracks fitness progress including timezone from the web.",
+    "project_scope": {
+            "is_crud_required": true,
+            "is_user_login_and_logout": true,
+            "is_external_urls_required": true
+        },
+    "external_url":
+        [
+            "https://worldtimeapi.org/api/timezone"
+        ],
+    "backend_code": null,
+    "api_endpoint_schema": null
+}"#;
+        let mut fact_sheet: FactSheet = serde_json::from_str(fact_sheet_str).unwrap();
+
+        agent
+            .execute(&mut fact_sheet)
+            .await
+            .expect("Failed to execute backend developer agent");
+        dbg!(fact_sheet);
     }
 }

@@ -25,11 +25,11 @@ pub async fn call_gpt(messages: Vec<Message>) -> Result<String, Box<dyn std::err
             .map_err(|e| -> Box<dyn std::error::Error + Send> { Box::new(e) })?,
     );
 
-    headers.insert(
-        "OpenAI-Organization",
-        HeaderValue::from_str(api_org.as_str())
-            .map_err(|e| -> Box<dyn std::error::Error + Send> { Box::new(e) })?,
-    );
+    // headers.insert(
+    //     "OpenAI-Organization",
+    //     HeaderValue::from_str(api_org.as_str())
+    //         .map_err(|e| -> Box<dyn std::error::Error + Send> { Box::new(e) })?,
+    // );
 
     // Create client
 
@@ -39,7 +39,7 @@ pub async fn call_gpt(messages: Vec<Message>) -> Result<String, Box<dyn std::err
         .map_err(|e| -> Box<dyn std::error::Error + Send> { Box::new(e) })?;
 
     let chat_completion: ChatCompletion = ChatCompletion {
-        model: "gpt-3.5-turbo-0301".to_string(),
+        model: "gpt-4o".to_string(),
         messages,
         temperature: 0.1,
     };

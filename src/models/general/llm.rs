@@ -27,3 +27,13 @@ pub struct APIChoice {
 pub struct APIResponse {
     pub choices: Vec<APIChoice>,
 }
+
+#[derive(Debug, Deserialize)]
+pub struct ANTResponse {
+    pub content: Vec<ANTContent>,
+}
+
+#[derive(Debug, Deserialize)]
+pub struct ANTContent {
+    pub text: String,
+}

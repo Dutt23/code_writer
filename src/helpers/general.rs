@@ -63,19 +63,20 @@ pub async fn check_status_code(client: &Client, url: &str) -> Result<u16, reqwes
 pub fn read_code_template_contents() -> String {
     let path = env::var("TEMPLATE_PATH").expect("Code template path not found");
     let template_path = format!("{}/_code_template.rs", path);
-    fs::read_to_string(path).expect("Failed to read code template")
+    fs::read_to_string(template_path).expect("Failed to read code template")
 }
 
 pub fn read_exec_main_contents() -> String {
     let path = env::var("TEMPLATE_PATH").expect("Code template path not found");
     let template_path = format!("{}/main.rs", path);
-    fs::read_to_string(path).expect("Failed to read code template")
+    fs::read_to_string(template_path).expect("Failed to read code template")
 }
 // Save new backend code
 pub fn save_backend_code(contents: &str) {
+    dbg!(&contents);
     let path = env::var("TEMPLATE_PATH").expect("Code template path not found");
     let main_path = format!("{}/main.rs", path);
-    fs::write(path, contents.as_bytes());
+    fs::write(main_path, contents.as_bytes());
 }
 // Save JSON API Endpoint Schema
 pub fn save_api_endpoint(contents: &str) {
