@@ -6,10 +6,13 @@ use crate::{
     helpers::general::{
         ai_task_request, read_code_template_contents, read_exec_main_contents, save_backend_code,
     },
-    models::agent_basic::{basic_agent::BasicAgent, basic_traits::BasicTrait},
+    models::agent_basic::{
+        basic_agent::{AgentState, BasicAgent},
+        basic_traits::BasicTrait,
+    },
 };
 
-use super::agent_traits::FactSheet;
+use super::agent_traits::{FactSheet, SpecialFunctions};
 
 #[derive(Debug)]
 pub struct AgentBackendDeveloper {
@@ -101,5 +104,40 @@ impl AgentBackendDeveloper {
         )
         .await;
         ai_response
+    }
+}
+
+#[async_trait::async_trait]
+impl SpecialFunctions for AgentBackendDeveloper {
+    fn get_attributes_from_agent(&self) -> &BasicAgent {
+        &self.attributes
+    }
+
+    async fn execute(
+        &mut self,
+        factsheet: &mut FactSheet,
+    ) -> Result<(), Box<dyn std::error::Error>> {
+        while self.attributes.state != AgentState::Finished {
+            match &self.attributes.state {
+                AgentState::Discovery => {
+                    self.call_initial_backend_code(factsheet).await;
+                    self.attributes.state = AgentState::Working;
+                }
+                AgentState::Working => {
+                    if self.bug_count == 0 {
+                        self.call_improved_backend_code(factsheet).await;
+                    } else {
+                        self.call_fix_code_bugs(factsheet).await;
+                    }
+                    self.attributes.state = AgentState::UnitTesting;
+                    continue;
+                }
+                AgentState::UnitTesting => {
+                    self.attributes.state = AgentState::Finished;
+                }
+                _ => {}
+            }
+        }
+        Ok(())
     }
 }
