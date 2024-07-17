@@ -1,5 +1,6 @@
 use std::{
     env,
+    fmt::format,
     process::{Command, Stdio},
     time::Duration,
 };
@@ -13,8 +14,8 @@ use crate::{
     helpers::{
         command_line::{confirm_safe_code, PrintCommand},
         general::{
-            ai_task_request, read_code_template_contents, read_exec_main_contents,
-            save_backend_code,
+            ai_task_request, check_status_code, read_code_template_contents,
+            read_exec_main_contents, save_backend_code,
         },
     },
     models::agent_basic::{
@@ -23,6 +24,7 @@ use crate::{
     },
 };
 use dotenv::dotenv;
+use reqwest::Client;
 use tokio::time;
 
 #[derive(Debug)]
@@ -204,7 +206,7 @@ impl SpecialFunctions for AgentBackendDeveloper {
                         .cloned()
                         .collect();
 
-                    factsheet.api_endpoint_schema = Some(check_eps);
+                    factsheet.api_endpoint_schema = Some(check_eps.clone());
 
                     PrintCommand::UnitTest.print_agent_message(
                         &self.attributes.position,
@@ -212,12 +214,12 @@ impl SpecialFunctions for AgentBackendDeveloper {
                     );
 
                     let path = env::var("EXEC_PATH").expect("Code execution path not found");
-                    let run_backend_server: std::process::Output = Command::new("cargo")
+                    let mut run_backend_server: std::process::Child = Command::new("cargo")
                         .arg("run")
                         .current_dir(path)
                         .stdout(Stdio::piped())
                         .stderr(Stdio::piped())
-                        .output()
+                        .spawn()
                         .expect("Failed to fun backend application");
 
                     PrintCommand::UnitTest.print_agent_message(
@@ -228,6 +230,48 @@ impl SpecialFunctions for AgentBackendDeveloper {
                     let seconds_sleep = Duration::from_secs(5);
                     time::sleep(seconds_sleep).await;
 
+                    let client: Client = Client::builder()
+                        .timeout(Duration::from_secs(5))
+                        .build()
+                        .unwrap();
+
+                    for ep in check_eps {
+                        let testing_msg = format!("Testing endpoint '{}...'", ep.route);
+
+                        PrintCommand::UnitTest
+                            .print_agent_message(&self.attributes.position, testing_msg.as_str());
+
+                        let url = format!("http://localhost:8080/{}", ep.route);
+                        match check_status_code(&client, &url).await {
+                            Ok(status) => {
+                                if status != 200 {
+                                    let err_msg: String =
+                                        format!("WARNING: failed to call backend ep {}", ep.route);
+                                    PrintCommand::Issue.print_agent_message(
+                                        &self.attributes.position,
+                                        err_msg.as_str(),
+                                    );
+                                }
+                            }
+                            Err(e) => {
+                                // kill $(lsof -t -i:8080)
+                                run_backend_server
+                                    .kill()
+                                    .expect("Failed to kill backend server");
+                                PrintCommand::Issue.print_agent_message(
+                                    &self.attributes.position,
+                                    format!("Error checking backend {}", e).as_str(),
+                                );
+                            }
+                        }
+                    }
+                    PrintCommand::UnitTest.print_agent_message(
+                        &self.attributes.position,
+                        "Backend code unit testing: testing complete",
+                    );
+                    run_backend_server
+                        .kill()
+                        .expect("Failed to kill backend server on completion");
                     self.attributes.state = AgentState::Finished;
                 }
                 _ => {}
