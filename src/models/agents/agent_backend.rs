@@ -1,8 +1,11 @@
 use crate::{
     ai_functions::aifunc_backend::{
         print_backend_webserver_code, print_fixed_code, print_improved_webserver_code,
+        print_rest_api_endpoints,
     },
-    helpers::general::{ai_task_request, read_code_template_contents, save_backend_code},
+    helpers::general::{
+        ai_task_request, read_code_template_contents, read_exec_main_contents, save_backend_code,
+    },
     models::agent_basic::{basic_agent::BasicAgent, basic_traits::BasicTrait},
 };
 
@@ -84,5 +87,19 @@ impl AgentBackendDeveloper {
 
         save_backend_code(&ai_response);
         factsheet.backend_code = Some(ai_response);
+    }
+
+    async fn call_extract_rest_api_endpoints(&self) -> String {
+        let backend_code = read_exec_main_contents();
+
+        let msg_context: String = format!("CODE_INPUT: {}", backend_code);
+        let ai_response: String = ai_task_request(
+            msg_context,
+            &self.attributes.position,
+            get_function_string!(print_rest_api_endpoints),
+            print_rest_api_endpoints,
+        )
+        .await;
+        ai_response
     }
 }
