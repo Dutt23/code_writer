@@ -2,7 +2,7 @@ use crossterm::{
     style::{Color, ResetColor, SetForegroundColor},
     ExecutableCommand,
 };
-use std::io::{stdin, stdout};
+use std::io::{stdin, stdout, Read};
 
 #[derive(PartialEq, Debug)]
 pub enum PrintCommand {
@@ -31,6 +31,36 @@ impl PrintCommand {
     }
 }
 
+pub fn confirm_safe_code() -> bool {
+    let mut stdout: std::io::Stdout = stdout();
+
+    loop {
+        stdout.execute(SetForegroundColor(Color::Blue)).unwrap();
+        println!("");
+        println!("WARNING: you are about to run code written entirely by AI. ");
+        println!("Review your code and confirm if you whish to continue \n");
+
+        stdout.execute(ResetColor).unwrap();
+
+        stdout.execute(SetForegroundColor(Color::Green)).unwrap();
+        print!("[1] All good");
+        stdout.execute(SetForegroundColor(Color::DarkRed)).unwrap();
+        print!("[2] Lets stop this project");
+        stdout.execute(ResetColor).unwrap();
+
+        let mut human_response: String = String::new();
+        stdin()
+            .read_line(&mut human_response)
+            .expect("Failed to read response");
+
+        let human_response = human_response.trim().to_lowercase();
+
+        match human_response.as_str() {
+            "1" | "ok" | "y" => return true,
+            _ => return false,
+        }
+    }
+}
 #[cfg(test)]
 mod tests {
     use super::*;

@@ -4,8 +4,12 @@ use crate::{
         print_backend_webserver_code, print_fixed_code, print_improved_webserver_code,
         print_rest_api_endpoints,
     },
-    helpers::general::{
-        ai_task_request, read_code_template_contents, read_exec_main_contents, save_backend_code,
+    helpers::{
+        command_line::{confirm_safe_code, PrintCommand},
+        general::{
+            ai_task_request, read_code_template_contents, read_exec_main_contents,
+            save_backend_code,
+        },
     },
     models::agent_basic::{
         basic_agent::{AgentState, BasicAgent},
@@ -133,6 +137,16 @@ impl SpecialFunctions for AgentBackendDeveloper {
                     continue;
                 }
                 AgentState::UnitTesting => {
+                    PrintCommand::UnitTest.print_agent_message(
+                        &self.attributes.position,
+                        "Backend code unit testing, ensuring safe code",
+                    );
+
+                    let is_safe_code = confirm_safe_code();
+
+                    if !is_safe_code {
+                        panic!("Exiting process .....")
+                    }
                     self.attributes.state = AgentState::Finished;
                 }
                 _ => {}
