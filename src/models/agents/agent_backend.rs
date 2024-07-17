@@ -1,3 +1,8 @@
+use std::{
+    env,
+    process::{Command, Stdio},
+};
+
 use super::agent_traits::{FactSheet, SpecialFunctions};
 use crate::{
     ai_functions::aifunc_backend::{
@@ -139,7 +144,7 @@ impl SpecialFunctions for AgentBackendDeveloper {
                 AgentState::UnitTesting => {
                     PrintCommand::UnitTest.print_agent_message(
                         &self.attributes.position,
-                        "Backend code unit testing, ensuring safe code",
+                        "Backend code unit testing: ensuring safe code",
                     );
 
                     let is_safe_code = confirm_safe_code();
@@ -147,6 +152,44 @@ impl SpecialFunctions for AgentBackendDeveloper {
                     if !is_safe_code {
                         panic!("Exiting process .....")
                     }
+                    PrintCommand::UnitTest.print_agent_message(
+                        &self.attributes.position,
+                        "Backend code unit testing: building project",
+                    );
+
+                    let path = env::var("EXEC_PATH").expect("Code execution path not found");
+                    let build_backend_server: std::process::Output = Command::new("cargo")
+                        .arg("build")
+                        .current_dir(path)
+                        .stdout(Stdio::piped())
+                        .stderr(Stdio::piped())
+                        .output()
+                        .expect("Failed to fun backend application");
+
+                    if build_backend_server.status.success() {
+                        self.bug_count = 0;
+                        PrintCommand::UnitTest.print_agent_message(
+                            &self.attributes.position,
+                            "Backend code unit testing: Test server build successful...",
+                        );
+                    } else {
+                        let err_arr = build_backend_server.stderr;
+                        let err_str = String::from_utf8(err_arr).unwrap();
+
+                        self.bug_count += 1;
+                        self.bug_errors = Some(err_str);
+
+                        if self.bug_count > 2 {
+                            PrintCommand::Issue.print_agent_message(
+                                &self.attributes.position,
+                                "Backend code unit testing: Too many bugs found in code",
+                            );
+                            panic!("Error too many bugs");
+                        }
+                        self.attributes.state = AgentState::Working;
+                        continue;
+                    }
+
                     self.attributes.state = AgentState::Finished;
                 }
                 _ => {}
